@@ -21,7 +21,8 @@ app.use(express.json());
 const pool = mysql.createPool({
   host: 'localhost',
   user: 'root',
-  password: '1998kouki',
+  // password: '1998kouki',
+  password: '',
   database: 'portfolio_gallery'
 }).promise();
 
@@ -57,36 +58,38 @@ app.get('/api/portfolios', async (req, res) => {
 
 // POSTエンドポイント
 app.post('/api/portfolios', async (req, res) => {
-  const { title, url, tags, description } = req.body;
+  const { title, url, industry, experience, color, description } = req.body;
   
   try {
     // OGP情報を取得
     const ogpData = await getOGPData(url);
     
-    // tagsが文字列の場合は配列に変換
-    const processedTags = Array.isArray(tags) ? tags : tags.split(',').map(tag => tag.trim());
-    
     const [result] = await pool.query(
-      'INSERT INTO portfolios (title, url, tags, description, ogp_data) VALUES (?, ?, ?, ?, ?)',
+      "INSERT INTO portfolios (title, url, industry, experience, color, description, ogp_data) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [
         title,
         url,
-        JSON.stringify(processedTags),
+        industry,
+        experience,
+        color,
         description,
-        JSON.stringify(ogpData)
+        JSON.stringify(ogpData),
       ]
     );
     
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       id: result.insertId,
       data: {
         title,
         url,
-        tags: processedTags,
+        url,
+        industry,
+        experience,
+        color,
         description,
-        ogp_data: ogpData
-      }
+        ogp_data: ogpData,
+      },
     });
   } catch (error) {
     console.error('Error creating portfolio:', error);
@@ -94,7 +97,8 @@ app.post('/api/portfolios', async (req, res) => {
   }
 });
 
-const PORT = 8080;
+// const PORT = 8080;
+const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

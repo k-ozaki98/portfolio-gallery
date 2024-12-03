@@ -15,23 +15,7 @@ export default function PortfolioCard({ portfolio }) {
     }
   };
 
-  // tagsの安全な解析
-  const getTags = () => {
-    try {
-      // すでに配列の場合はそのまま返す
-      if (Array.isArray(portfolio.tags)) {
-        return portfolio.tags;
-      }
-      // 文字列の場合はパースする
-      return JSON.parse(portfolio.tags || '[]');
-    } catch (error) {
-      console.error('Error parsing tags:', error);
-      return [];
-    }
-  };
-
   const ogpData = getOgpData();
-  const tags = getTags();
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
@@ -52,38 +36,36 @@ export default function PortfolioCard({ portfolio }) {
 
       {/* コンテンツエリア */}
       <div className="p-4">
-        <h3 className="text-xl font-bold mb-2">
-          {portfolio.title}
-        </h3>
-        
+        <h3 className="text-xl font-bold mb-2">{portfolio.title}</h3>
+
         {/* OGPのサイト名があれば表示 */}
         {ogpData?.site_name && (
-          <p className="text-sm text-gray-500 mb-2">
-            {ogpData.site_name}
-          </p>
+          <p className="text-sm text-gray-500 mb-2">{ogpData.site_name}</p>
         )}
 
         <p className="text-gray-600 mb-4">
-          {portfolio.description || ogpData?.description || '説明なし'}
+          {portfolio.description || ogpData?.description || "説明なし"}
         </p>
 
-        <div className="flex flex-wrap gap-1 mb-3">
-          {tags.map((tag, index) => (
-            <span
-              key={index}
-              className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs"
-            >
-              {tag}
-            </span>
-          ))}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          <div className="bg-gray-50 p-2 rounded">
+            <span className="text-xs text-gray-500 block">業界</span>
+            <span className="font-medium">{portfolio.industry}</span>
+          </div>
+          <div className="bg-gray-50 p-2 rounded">
+            <span className="text-xs text-gray-500 block">経験年数</span>
+            <span className="font-medium">{portfolio.experience}</span>
+          </div>
+          <div className="bg-gray-50 p-2 rounded">
+            <span className="text-xs text-gray-500 block">メインカラー</span>
+            <span className="font-medium">{portfolio.color}</span>
+          </div>
         </div>
 
         <div className="flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-500">
-              {new Date(portfolio.created_at).toLocaleDateString()}
-            </span>
-          </div>
+          <span className="text-sm text-gray-500">
+            {new Date(portfolio.created_at).toLocaleDateString()}
+          </span>
           <a
             href={portfolio.url}
             target="_blank"
