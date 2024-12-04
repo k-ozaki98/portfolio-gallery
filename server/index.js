@@ -97,6 +97,95 @@ app.post('/api/portfolios', async (req, res) => {
   }
 });
 
+// いいねのエンドポイント
+app.post('/api/portfolios/:id/like', async(req, res) => {
+  const {id} = req.params;
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO likes (portfolio_id) VALUES (?)',
+      [id]          
+    );
+
+    const [likes] = await pool.query(
+      'SELECT COUNT(*) as count FROM likes WHERE portfolio_id = ?',
+      [id]
+    );
+
+    res.json({
+      success: true,
+      likes: likes[0].count
+    });
+  } catch (error) {
+    console.error('いいねエラー', error);
+    res.status(500).json({error: 'データベースエラー'});
+  }
+})
+
+// コメントのエンドポイント
+app.post('/api/portfolios/:id/comments', async(req, res) => {
+  const {id} = req.params;
+  const {content} = req.body;
+
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO comments (portfolio_id, content) VALUES (?, ?)',
+      [id, content]
+    );
+
+    const [comment] = await pool.query(
+      'SELECT * FROM comments WHERE id = ?',
+      [result.insertId]
+    );
+
+    res.json({
+      success: true,
+      comment: comment[0]
+    });
+  } catch (error) {
+    console.error('コメントエラー', error);
+    res.status(500).json({error: 'データベースエラー'});
+  }
+});
+
+// GET エンドポイント
+app.get('/api/portfolios', async (req, res) => {
+  try {
+    // クエリを修正して、いいねとコメントを正しく取得
+    const [rows] = await pool.query(`
+      SELECT 
+        p.*,
+        COUNT(DISTINCT l.id) as likes,
+        JSON_ARRAYAGG(
+          JSON_OBJECT(
+            'id', c.id,
+            'content', c.content,
+            'created_at', c.created_at
+          )
+        ) as comments
+      FROM portfolios p
+      LEFT JOIN likes l ON p.id = l.portfolio_id
+      LEFT JOIN comments c ON p.id = c.portfolio_id
+      GROUP BY p.id
+      ORDER BY p.created_at DESC
+    `);
+
+    // NULLのコメントを空配列に変換
+    const portfolios = rows.map(row => ({
+      ...row,
+      comments: row.comments || '[]'
+    }));
+
+    // デバッグログ
+    console.log('Fetched portfolios:', portfolios);
+    
+    res.json(portfolios);
+  } catch (error) {
+    console.error('Error fetching portfolios:', error);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
 // const PORT = 8080;
 const PORT = 3001;
 app.listen(PORT, () => {

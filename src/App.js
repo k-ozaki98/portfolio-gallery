@@ -17,6 +17,43 @@ function App() {
     color: ''
   });
 
+  // いいね機能ハンドラー
+  const handleLike = async(portfolioId) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/portfolios/${portfolioId}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if(response.ok) {
+        fetchPortfolios();
+      }
+    } catch(error) {
+      console.error('いいねエラー', error);
+    }
+  }
+
+  // コメント機能ハンドラー
+  const handleComment = async (portfolioId, content) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/portfolios/${portfolioId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content }), 
+      });
+
+      if (response.ok) {
+        fetchPortfolios();
+      }
+    } catch(error) {
+      console.error('コメントエラー', error);
+    }
+  }
+
   useEffect(() => {
     fetchPortfolios();
   }, []);
@@ -105,7 +142,7 @@ function App() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPortfolios.map((portfolio) => (
-            <PortfolioCard key={portfolio.id} portfolio={portfolio} />
+            <PortfolioCard key={portfolio.id} portfolio={portfolio} onLike={handleLike} onComment={handleComment} />
           ))}
         </div>
 
